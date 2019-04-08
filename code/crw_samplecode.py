@@ -4,6 +4,14 @@ from bs4 import BeautifulSoup
 import urllib3
 import requests
 import hashlib
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-o',
+    help = 'output file'
+    )
+args = vars(parser.parse_args())
+
 
 # connection pool and request making
 http = urllib3.PoolManager()
@@ -115,12 +123,22 @@ print(recpercent)
 print(reviewnum)
 print(reccomment)
 
-
-for tag in soup.find_all('span', class_ = 'giftcard_available'):
-    gcard = []
-
-
-
-
-# name, id, cooperation relationship, star, address, medal list(hotel type),
-# facility, review, #reviews, hotel_level, total_judgement_score, recommend_context
+f = open('%s' % args['o'], 'a')
+for i in range(len(htlid)):
+    f.write('%s\t' % htlid[i])
+    f.write('%s\t' % htlname[i])
+    f.write('%s\t' % hshtlid[i])
+    f.write('%s\t' % medal[i])
+    f.write('%s\t' % qmedal[i])
+    f.write('%s\t' % star[i])
+    f.write('%s\t' % reclevel[i])
+    f.write('%f\t' % float(reviewscore[i]))
+    f.write('%s\t' % recpercent[i])
+    f.write('%d\t' % int(reviewnum[i]))
+    f.write('%d\t' % int(lowprice[i]))
+    f.write('%s\t' % reccomment[i])
+    f.write('%s\t' % special[i])
+    f.write('%s\t' % icon[i])
+    f.write('%s\t' % loc[i])
+    f.write('%s\n' % piclink[i])
+f.close()
