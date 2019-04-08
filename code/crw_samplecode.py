@@ -34,11 +34,8 @@ for i in range(1,11):
 
 # get hotel names
     htlname = []
-    for tag in soup.find_all('h2', class_ = 'hotel_name'):
-        htlname.append(tag.text.strip())
-    htlname2 = []
     p = re.compile('"name":"(.*?)"')
-    htlname2.extend(p.findall(str(soup)))
+    htlname.extend(p.findall(str(soup)))
 
 # get hotel ids
     htlid = []
@@ -47,29 +44,33 @@ for i in range(1,11):
         hid = tag.get('id')
         htlid.append(hid)
         hshtlid.append(hashlib.md5(hid.encode()).hexdigest())
-    htlid2 = []
-    p = re.compile('"id":"([0-9]*?)"')
-    htlid2.extend(p.findall(str(soup))[7:])
 
 # get hotel_strategymedal
     medal = []
     qmedal = []
+    brandq = []
     star = []
     for ico in soup.find_all('span', attrs = {'class': 'hotel_ico'}):
-        #print(ico)
         lmedal = []
         for tag in ico.find_all('span'):
             lmedal.append(tag.attrs['class'])
+        if len(lmedal) == 4:
+            medal.append(lmedal[0])
+            brandq.append(lmedal[1])
+            qmedal.append(lmedal[2])
+            star.append(lmedal[3])
         if len(lmedal) == 3:
             medal.append(lmedal[0])
+            brandq.append('null')
             qmedal.append(lmedal[1])
             star.append(lmedal[2])
         if len(lmedal) == 2:
             medal.append(lmedal[0])
-            qmedal.append('')
+            brandq.append('null')
+            qmedal.append('null')
             star.append(lmedal[1])
 
-# get hotel picture on the hotel list page
+# get hotel imagelink
     imglink = []
     for tag in soup.find_all('div', class_ = 'dpic J_as_bottom'):
         imglink.append(tag.img.get('src'))
@@ -101,21 +102,6 @@ for i in range(1,11):
         lowprice.append(tag.text)
 
 # get hotel scores
-    reclevel = []
-    reviewscore = []
-    recpercent = []
-    reviewnum = []
-    reccomment = []
-    for tag in soup.find_all('span', class_ = 'hotel_level'):
-        reclevel.append(tag.text)
-    for tag in soup.find_all('span', class_ = 'hotel_value'):
-        reviewscore.append(tag.text)
-    for tag in soup.find_all('span', class_ = 'total_judgement_score'):
-        recpercent.append(tag.span.text)
-    for tag in soup.find_all('span', class_ = 'hotel_judgement'):
-        reviewnum.append(tag.span.text)
-    for tag in soup.find_all('span', class_ = 'recommend'):
-        reccomment.append(tag.text)
     revscore = []
     revcount = []
     recscore = []
@@ -125,6 +111,19 @@ for i in range(1,11):
     recscore.extend(p.findall(str(soup)))
     p = re.compile('"dpcount":"([0-9]*)"')
     revcount.extend(p.findall(str(soup)))
+    reclevel = []
+    reccomment = []
+    for tag in soup.find_all('div', class_ = 'hotelitem_judge_box'):
+        item1 = tag.find('span', class_ = 'recommend')
+        item2 = tag.find('span', class_ = 'hotel_level')
+        if item1:
+            reccomment.append(item1.text)
+        else:
+            reccomment.append('null')
+        if item2:
+            reclevel.append(item2.text)
+        else:
+            reclevel.append('null')
 
 
 # get latitude and longitude
@@ -136,24 +135,26 @@ for i in range(1,11):
     p = re.compile('"lon":"([0-9]*\.[0-9]*)"')
     lon.extend(p.findall(str(soup)))
 
-
+# write lists into the output file
     f = open('%s' % args['o'], 'a')
     for i in range(len(htlid)):
         f.write('%s\t' % htlid[i])
         f.write('%s\t' % htlname[i])
-        #f.write('%s\t' % htlname2[i])
         f.write('%s\t' % hshtlid[i])
         f.write('%s\t' % medal[i])
+        f.write('%s\t' % brandq[i])
         f.write('%s\t' % qmedal[i])
         f.write('%s\t' % star[i])
+        f.write('%f\t' % float(revscore[i]))
+        f.write('%d\t' % int(revcount[i]))
+        f.write('%d\t' % int(recscore[i]))
         f.write('%s\t' % reclevel[i])
-        f.write('%f\t' % float(reviewscore[i]))
-        f.write('%s\t' % recpercent[i])
-        f.write('%d\t' % int(reviewnum[i]))
-        f.write('%d\t' % int(lowprice[i]))
         f.write('%s\t' % reccomment[i])
+        f.write('%d\t' % int(lowprice[i]))
         f.write('%s\t' % special[i])
         f.write('%s\t' % icon[i])
+        f.write('%f\t' % float(lat[i]))
+        f.write('%f\t' % float(lon[i]))
         f.write('%s\t' % loc[i])
         f.write('%s\n' % imglink[i])
     f.close()
